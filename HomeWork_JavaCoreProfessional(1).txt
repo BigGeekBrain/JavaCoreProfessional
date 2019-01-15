@@ -1,0 +1,186 @@
+public class MainClass {
+public static void main(String[] args) {
+
+Integer[] integers = {19, 32, 432, 43};
+Integer[] integers2 = {10, 3, 43, 4, 65, 65, 75};
+
+replaceElementsInArrays(integers, integers2, 1,3);
+
+System.out.println(Arrays.toString(integers));
+System.out.println(Arrays.toString(integers2));
+}
+
+public static <T extends Object> void replaceElementsInArrays (@NotNull T[] firstArray, @NotNull T[] secondArray, int indexOfElementInFirstArray, int indexOfElementInSecondArray){
+int firstArraySize = firstArray.length;
+int secondArraySize = secondArray.length;
+
+if (indexOfElementInFirstArray > firstArraySize - 1 || indexOfElementInFirstArray < 0) {
+throw new IndexOutOfBoundsException("there is no index (" + indexOfElementInFirstArray + ") in first array");
+}
+
+if (indexOfElementInSecondArray > secondArraySize - 1 || indexOfElementInSecondArray < 0) {
+throw new IndexOutOfBoundsException("there is no index (" + indexOfElementInSecondArray + ") in second array");
+}
+
+T element = firstArray[indexOfElementInFirstArray];
+
+firstArray[indexOfElementInFirstArray] = secondArray[indexOfElementInSecondArray];
+secondArray[indexOfElementInSecondArray] = element;
+}
+}            
+
+     ----------------------------------------------------------------------------------
+
+public class ConvertArrayToArrayList {
+    public static void main(String[] args) {
+        Integer[] arrayOfIntegers = {3, 43, 4, 343, 4324};
+        String[] arrayOfStrings = {"hi", "hello", "hey"};
+
+        ArrayList<?> list = toArrayList(arrayOfIntegers);
+        ArrayList<?> list1 = toArrayList(arrayOfStrings);
+        
+        System.out.println(list);
+        System.out.println(list1);
+    }
+
+
+    public static <T> ArrayList<T> toArrayList(@NotNull T[] array) {
+        ArrayList<T> arrayList = new ArrayList<>();
+        for (int i = 0; i < array.length; i++) {
+            arrayList.add(array[i]);
+        }
+        return arrayList;
+    }
+}
+
+         ----------------------------------------------------------------------------------------------
+
+public class MainClass {
+    public static void main(String[] args) throws FruitTypeException {
+        Box<Apple> appleBox = new Box<>(new ArrayList<>(Arrays.asList(new Apple(), new Apple(), new Apple(), new Apple())));
+        Box<Apple> appleBox2 = new Box<>(new ArrayList<>(Arrays.asList(new Apple(), new Apple(), new Apple())));
+        Box<Orange> orangeBox = new Box<>(new ArrayList<>(Arrays.asList(new Orange(), new Orange())));
+        Box<Orange> orangeBox2 = new Box<>(new ArrayList<>(Arrays.asList(new Orange(), new Orange(), new Orange())));
+
+        appleBox.addFruit(new Apple());
+
+
+        System.out.println(appleBox.getWeight());
+        System.out.println(appleBox2.getWeight());
+        System.out.println(orangeBox.getWeight());
+        System.out.println(orangeBox2.getWeight());
+
+        System.out.println(appleBox2.compare(orangeBox));
+        System.out.println(appleBox.compare(orangeBox2));
+
+        appleBox.pourFruit(appleBox2);
+
+        System.out.println(appleBox);
+        System.out.println(appleBox2);
+
+        /* console result
+            5.0
+            3.0
+            3.0
+            4.5
+
+            true
+            false
+
+            Box{contents=[]}
+            Box{contents=[Apple, Apple, Apple, Apple, Apple, Apple, Apple, Apple]}
+         */
+    }
+}
+
+public abstract class Fruit {
+}
+
+public class Apple extends Fruit {
+    private static float weight = 1.0f;
+
+    public static float getWeight() {
+        return weight;
+    }
+
+    @Override
+    public String toString() {
+        return "Apple";
+    }
+}
+
+public class Orange extends Fruit {
+    private static float weight = 1.5f;
+
+    public static float getWeight() {
+        return weight;
+    }
+
+    @Override
+    public String toString() {
+        return "Orange";
+    }
+}
+
+public class Box <T extends Fruit> {
+    private ArrayList<T> contents;
+
+    public ArrayList<T> getContents() {
+        return contents;
+    }
+
+    public Box(ArrayList<T> contents) {
+        this.contents = contents;
+    }
+
+    public void addFruit(T fruit){
+        contents.add(fruit);
+    }
+
+    public float getWeight(){
+        int quantityOFFruit = contents.size();
+        if (contents.get(0).getClass().getSimpleName().equals("Apple")) {
+            return quantityOFFruit * Apple.getWeight();
+        }
+
+        if (contents.get(0).getClass().getSimpleName().equals("Orange")) {
+            return quantityOFFruit * Orange.getWeight();
+        }
+        return 0;
+
+    }
+
+    public void pourFruit(Box<T> boxToPour) throws FruitTypeException {
+
+        // правильно ли будет провер€ть тип коробки сразу в методе(текуща€ реализаци€) на этапе компил€ции, чем выбрасывать исключение в runtime (реализовано ниже).
+
+        // праильно ли понимаю что проверка на этапе компил€ции всегда лучше? кроме unchecked исключений конечно.
+
+
+        /*
+        if (!contents.get(0).getClass().equals(boxToPour.getContents().get(0).getClass())) {
+            throw new FruitTypeException("check whether your boxes have the same type");
+        }
+        */
+
+        boxToPour.getContents().addAll(contents);
+        contents.clear();
+    }
+
+    public boolean compare(Box another){
+        return  Math.abs(this.getWeight() - another.getWeight()) < 0.00001 ? true : false;
+    }
+
+    @Override
+    public String toString() {
+        return "Box{" +
+                "contents=" + contents +
+                '}';
+    }
+}
+
+public class FruitTypeException extends IOException {
+    public FruitTypeException(String message) {
+        super(message);
+    }
+}
