@@ -157,6 +157,7 @@ public class Box <T extends Fruit> {
         // праильно ли понимаю что проверка на этапе компиляции всегда лучше? кроме unchecked исключений конечно.
 
 
+
         /*
         if (!contents.get(0).getClass().equals(boxToPour.getContents().get(0).getClass())) {
             throw new FruitTypeException("check whether your boxes have the same type");
