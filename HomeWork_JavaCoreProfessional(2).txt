@@ -1,0 +1,183 @@
+public interface AuthService {
+    String getNicknameByLoginAndPassword(String login, String password);
+    String changeNick(String newNick, String oldNick);
+}
+
+public class SimpleAuthService implements AuthService {
+
+    @Override
+    public String changeNick(String newNick, String oldNick) {
+        for (UserData o : users) {
+            if (o.nickname.equals(newNick)) {
+                return null;
+            }
+
+            if (o.nickname.equals(oldNick)) {
+                o.nickname = newNick;
+                return newNick;
+            }
+        }
+        return null;
+    }
+}
+
+public class DataAuthService implements AuthService {
+
+    private static Connection connection;
+    private static Statement stmt;
+    private static PreparedStatement psGetNicknameByLoginAndPassword;
+    private static PreparedStatement psChangeNick;
+
+    public static void connect(){
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:main.db");
+            stmt = connection.createStatement();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void disconnect(){
+        try {
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            psChangeNick.close();
+            psGetNicknameByLoginAndPassword.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void prepareAllStmt() {
+        try {
+            psGetNicknameByLoginAndPassword = connection.prepareStatement("SELECT nick FROM users WHERE login = ? AND password = ?;");
+            psChangeNick = connection.prepareStatement("UPDATE users SET nick = ? WHERE nick = ?;");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    //too lazy for enter this in bd by hands
+
+    public void fillTable(){
+        try {
+            connection.setAutoCommit(false);
+            for (int i = 1; i <= 10; i++) {
+                stmt.executeUpdate("INSERT INTO users (login, password, nick) VALUES ('login" + i + "', 'pass" + i + "', 'nick" + i +"');");
+            }
+            connection.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public String changeNick(String newNick, String oldNick){
+        try {
+            psChangeNick.setString(1, newNick);
+            psChangeNick.setString(2, oldNick);
+            psChangeNick.executeUpdate();
+            return newNick;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    @Override
+    public String getNicknameByLoginAndPassword(String login, String password) {
+        try {
+            psGetNicknameByLoginAndPassword.setString(1, login);
+            psGetNicknameByLoginAndPassword.setString(2, password);
+            ResultSet rs = psGetNicknameByLoginAndPassword.executeQuery();
+            if (rs.next()) {
+                return rs.getString("nick");
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+
+public class ClientHandler {
+    private String nickname;
+    private Server server;
+    private Socket socket;
+    private DataInputStream in;
+    private DataOutputStream out;
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public ClientHandler(Server server, Socket socket) {
+      
+                    while (true) {
+                        String msg = in.readUTF();
+                        if(msg.startsWith("/")) {
+                            if (msg.equals("/end")) {
+                                sendMsg("/end");
+                                break;
+                            }
+                            if(msg.startsWith("/w ")) {
+                                String[] tokens = msg.split("\\s", 3);
+                                server.privateMsg(this, tokens[1], tokens[2]);
+                            }
+                            if (msg.startsWith("/cn ")) {
+                                String[] tokens = msg.split("\\s");
+                                if (tokens[1].contains(" ")) {
+                                    sendMsg("your nickname shouldn't includes spaces");
+                                } else {
+                                    String newNick = server.getAuthService().changeNick(tokens[1], nickname);
+                                    if (!newNick.equals(null)) {
+                                        sendMsg("your nickname have been changed to " + newNick);
+                                        nickname = tokens[1];
+                                        server.broadcastClientsList();
+                                    } else {
+                                        sendMsg("something going wrong...");
+                                    }
+                                }
+                          }
+                }
+}
+
+public Class server{
+public Server() {
+
+        clients = new Vector<>();
+        authService = new DataAuthService();
+        ((DataAuthService) authService).connect();
+        ((DataAuthService) authService).prepareAllStmt();
+        ((DataAuthService) authService).fillTable();
+
+        try (ServerSocket serverSocket = new ServerSocket(8189)) {
+            System.out.println("Сервер запущен на порту 8189");
+            while (true) {
+                Socket socket = serverSocket.accept();
+                new ClientHandler(this, socket);
+                System.out.println("Подключился новый клиент");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Сервер завершил свою работу");
+        ((DataAuthService) authService).disconnect();
+    }
+}
+
+
