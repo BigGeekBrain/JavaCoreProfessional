@@ -166,18 +166,21 @@ public Server() {
         ((DataAuthService) authService).fillTable();
 
         try (ServerSocket serverSocket = new ServerSocket(8189)) {
-            System.out.println("Сервер запущен на порту 8189");
+            System.out.println("Г‘ГҐГ°ГўГҐГ° Г§Г ГЇГіГ№ГҐГ­ Г­Г  ГЇГ®Г°ГІГі 8189");
             while (true) {
                 Socket socket = serverSocket.accept();
                 new ClientHandler(this, socket);
-                System.out.println("Подключился новый клиент");
+                System.out.println("ГЏГ®Г¤ГЄГ«ГѕГ·ГЁГ«Г±Гї Г­Г®ГўГ»Г© ГЄГ«ГЁГҐГ­ГІ");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Сервер завершил свою работу");
+        System.out.println("Г‘ГҐГ°ГўГҐГ° Г§Г ГўГҐГ°ГёГЁГ« Г±ГўГ®Гѕ Г°Г ГЎГ®ГІГі");
         ((DataAuthService) authService).disconnect();
     }
 }
+
+
+
 
 
