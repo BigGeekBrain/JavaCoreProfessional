@@ -1,0 +1,125 @@
+Client
+
+public class DataBase {
+
+    private static Connection connection;
+    private static Statement stmt;
+
+    public static void connect(){
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:main.db");
+            stmt = connection.createStatement();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void disconnect(){
+        try {
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ArrayList<String> getAllLogins(){
+        ArrayList<String> list = new ArrayList<>();
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT login FROM users WHERE id < 214;");
+            while (rs.next()) {
+                String login = rs.getString("login");
+                list.add(login);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+}
+
+public class HistoryManager {
+    public static void main(String[] args) {
+        DataBase.connect();
+        ArrayList<String> userLogins = DataBase.getAllLogins();
+        createHistoryFiles(userLogins);
+        DataBase.disconnect();
+    }
+
+    public static void createHistoryFiles(ArrayList<String> users) {
+        for (String u: users) {
+            File file = new File("client/src/main/resources/history/history_" + u + ".txt");
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+public class Controller implements Initializable {
+
+    private boolean authenticated;
+    private String nickname;
+    private String login;
+    private File history;
+
+public void linkCallbacks() {
+        Network.setCallOnException(args -> showAlert(args[0].toString()));
+
+        Network.setCallOnCloseConnection(args -> setAuthenticated(false));
+
+        Network.setCallOnAuthenticated(args -> {
+            setAuthenticated(true);
+            nickname = args[0].toString();
+            login = args[1].toString();
+            history = new File("client/src/main/resources/history/history_" + login + ".txt");
+        });
+  
+ 
+    public void sendMsg() {
+        if (Network.sendMsg(msgField.getText())) {
+            try (PrintWriter writer = new PrintWriter(new FileOutputStream(history, true), true)) {
+                writer.println(msgField.getText());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            msgField.clear();
+            msgField.requestFocus();
+        }
+    }
+
+
+        Network.setCallOnMsgReceived(args -> {
+            String msg = args[0].toString();
+            if (msg.startsWith("/")) {
+                if (msg.startsWith("/clients ")) {
+                    String[] tokens = msg.split("\\s");
+                    Platform.runLater(() -> {
+                        clientsList.getItems().clear();
+                        for (int i = 1; i < tokens.length; i++) {
+                            clientsList.getItems().add(tokens[i]);
+                        }
+                    });
+                }
+            } else {
+                textArea.appendText(msg + "\n");
+                if (!msg.startsWith(nickname + ": ")) {
+                    try (PrintWriter writer = new PrintWriter(new FileOutputStream(history, true), true)) {
+                        writer.println(msg);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+}
