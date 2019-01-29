@@ -1,0 +1,95 @@
+public class ABC_Writer {
+
+
+    private static volatile char symbol = 'A';
+
+    private static ReentrantLock locker = new ReentrantLock();
+    private static Condition condition = locker.newCondition();
+
+    public static void main(String[] args) {
+
+        new Thread(() -> {
+            locker.lock();
+
+            try {
+                for (int i = 0; i < 5; i++) {
+                    while (symbol != 'A') {
+                        condition.await();
+                    }
+
+                    System.out.print(symbol);
+                    symbol = 'B';
+                    condition.signalAll();
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                locker.unlock();
+            }
+        }).start();
+
+        new Thread(() -> {
+            locker.lock();
+
+            try {
+                for (int i = 0; i < 5; i++) {
+                    while (symbol != 'B') {
+                        condition.await();
+                    }
+
+                    System.out.print(symbol);
+                    symbol = 'C';
+                    condition.signalAll();
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                locker.unlock();
+            }
+        }).start();
+
+        new Thread(() -> {
+            locker.lock();
+
+            try {
+                for (int i = 0; i < 5; i++) {
+                    while (symbol != 'C') {
+                        condition.await();
+                    }
+                    System.out.print(symbol + " ");
+                    symbol = 'A';
+                    condition.signalAll();
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                locker.unlock();
+            }
+        }).start();
+
+    }
+}
+
+                  ------------------------------------------
+
+private ExecutorService executorService;
+
+
+    public ClientHandler(Server server, Socket socket) {
+        try {
+            this.executorService = Executors.newFixedThreadPool(10);
+            executorService.execute(() -> {
+                try {
+                    while (!checkAuth());
+                    while (readMassage());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    this.disconnect();
+                }
+            });
+
+ExecutorService - ограничивает количество подключаемых клиентов или создает слишком много фоновых потоков.
