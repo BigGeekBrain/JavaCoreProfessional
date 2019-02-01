@@ -9,9 +9,9 @@ public class Car implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println(this.name + " готовится");
+            System.out.println(this.name + " ГЈГ®ГІГ®ГўГЁГІГ±Гї");
             Thread.sleep(500 + (int)(Math.random() * 800));
-            System.out.println(this.name + " готов");
+            System.out.println(this.name + " ГЈГ®ГІГ®Гў");
             MainClass.prepare.countDown();
             MainClass.prepare.await();
 
@@ -34,7 +34,7 @@ public class MainClass {
 
 
     public static void main(String[] args) {
-        System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Подготовка!!!");
+        System.out.println("Г‚ГЂГ†ГЌГЋГ… ГЋГЃГљГџГ‚Г‹Г…ГЌГ€Г… >>> ГЏГ®Г¤ГЈГ®ГІГ®ГўГЄГ !!!");
         Race race = new Race(new Road(60), new Tunnel(), new Road(40));
         Car[] cars = new Car[CARS_COUNT];
         for (int i = 0; i < cars.length; i++) {
@@ -51,7 +51,7 @@ public class MainClass {
         }
 
 
-        System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка началась!!!");
+        System.out.println("Г‚ГЂГ†ГЌГЋГ… ГЋГЃГљГџГ‚Г‹Г…ГЌГ€Г… >>> ГѓГ®Г­ГЄГ  Г­Г Г·Г Г«Г Г±Гј!!!");
 	
 	synchronized(mon) {
 	if(isWinner == false) {
@@ -66,7 +66,7 @@ public class MainClass {
         }
 
 
-        System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка закончилась!!!");
+        System.out.println("Г‚ГЂГ†ГЌГЋГ… ГЋГЃГљГџГ‚Г‹Г…ГЌГ€Г… >>> ГѓГ®Г­ГЄГ  Г§Г ГЄГ®Г­Г·ГЁГ«Г Г±Гј!!!");
     }
 }
 
@@ -76,7 +76,7 @@ public class Tunnel extends Stage {
 
     public Tunnel() {
         this.length = 80;
-        this.description = "Тоннель " + length + " метров";
+        this.description = "Г’Г®Г­Г­ГҐГ«Гј " + length + " Г¬ГҐГІГ°Г®Гў";
         this.semaphore = new Semaphore(2);
     }
 
@@ -84,17 +84,17 @@ public class Tunnel extends Stage {
     public void go(Car c) {
         try {
             try {
-                System.out.println(c.getName() + " готовится к этапу(ждет): " + description);
+                System.out.println(c.getName() + " ГЈГ®ГІГ®ГўГЁГІГ±Гї ГЄ ГЅГІГ ГЇГі(Г¦Г¤ГҐГІ): " + description);
 
                 if (!semaphore.tryAcquire()) {
-                    System.out.println(c.getName() + " начал этап: " + description);
+                    System.out.println(c.getName() + " Г­Г Г·Г Г« ГЅГІГ ГЇ: " + description);
                     Thread.sleep(length / c.getSpeed() * 1000);
                 }
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
-                System.out.println(c.getName() + " закончил этап: " + description);
+                System.out.println(c.getName() + " Г§Г ГЄГ®Г­Г·ГЁГ« ГЅГІГ ГЇ: " + description);
                 semaphore.release();
             }
         } catch (Exception e) {
@@ -102,4 +102,5 @@ public class Tunnel extends Stage {
         }
     }
 }
+
 
