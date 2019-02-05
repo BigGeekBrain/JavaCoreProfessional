@@ -164,3 +164,4 @@ public class Tests {
         Assert.assertArrayEquals(new int[] {}, tasks.copyArrayFromLast4(new Integer[] {3, 5, 454, 33, 224, 134}));
     }
 }
+
