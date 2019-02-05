@@ -1,0 +1,166 @@
+public class Server {
+    private Vector<ClientHandler> clients;
+    private AuthService authService;
+    private final Logger logger = Logger.getLogger(Server.class.getName());
+    private Handler logHandler;
+    private Handler consoleHandler;
+    private final Date dat = new Date();
+
+    public AuthService getAuthService() {
+        return authService;
+    }
+
+    public Server() {
+        clients = new Vector<>();
+        authService = new DataAuthService();
+        ((DataAuthService) authService).connect();
+        ((DataAuthService) authService).prepareAllStmt();
+        logger.setLevel(Level.ALL);
+        logger.setUseParentHandlers(false);
+
+        try {
+            logHandler = new FileHandler("log.log");
+            consoleHandler = new ConsoleHandler();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        logHandler.setLevel(Level.ALL);
+        logHandler.setFormatter(new Formatter() {
+            @Override
+            public String format(LogRecord record) {
+                dat.setTime(record.getMillis());
+                return dat + "\n ----- "
+                        + record.getMessage()
+                        + " ------ "
+                        + record.getLevel()
+                        + " ------ "
+                        + record.getLoggerName() + "\n";
+            }
+        });
+
+        consoleHandler.setLevel(Level.ALL);
+        consoleHandler.setFormatter(new SimpleFormatter());
+        logger.addHandler(logHandler);
+        logger.addHandler(consoleHandler);
+
+        try (ServerSocket serverSocket = new ServerSocket(8189)) {
+            logger.log(Level.CONFIG, "Server was started on 8189");
+            while (true) {
+                Socket socket = serverSocket.accept();
+                new ClientHandler(this, socket);
+                logger.log(Level.FINE, "new client connected");
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Server wasn't started");
+            e.printStackTrace();
+        }
+        logger.log(Level.WARNING, "Server shutdown");
+        ((DataAuthService) authService).disconnect();
+    }
+
+}
+
+public class Tasks {
+
+
+    public boolean isArrayHas1and4(Integer[] array) {
+        ArrayList<Double> numbers = new ArrayList<>();
+
+        for (Integer i : array) {
+            try {
+                if (i != 4 && i != 1) {
+                    throw new RuntimeException();
+                }
+            } catch (RuntimeException e) {
+                System.out.println("your array must contains only 1 and 4");
+                return false;
+            }
+
+            numbers.add(array[i].doubleValue());
+        }
+
+        return (numbers.contains(1.0) && numbers.contains(4.0)) ? true : false;
+    }
+
+    public int[] copyArrayFromLast4(@NotNull Integer... array){
+        ArrayList<Integer> defaultArr = new ArrayList<>(Arrays.stream(array).collect(Collectors.toList()));
+        ArrayList<Integer> resultArr = new ArrayList<>();
+
+        try {
+            if (!defaultArr.contains(4)) {
+                throw new RuntimeException();
+            }
+        } catch (RuntimeException e) {
+            System.out.println("your array must contains at least one 4");
+        }
+
+
+        for (int i = array.length - 1, j = 0; i >= 0 ; i--, j++) {
+            if (array[i] == 4) {
+                while (j > 0) {
+                    resultArr.add(array[++i]);
+                    j--;
+                }
+                break;
+            }
+        }
+        return resultArr.stream().mapToInt(i -> i).toArray();
+    }
+}
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+public class Tests {
+    private Tasks tasks;
+
+    @Before
+    public void prepare(){
+        tasks = new Tasks();
+
+    }
+
+    @Test
+    public void testMethod1_ex1() {
+        Assert.assertEquals(false, tasks.isArrayHas1and4(new Integer[] {1, 4, 1, 1, 1, 4, 1, 4, 1, 6}));
+    }
+
+    @Test
+    public void testMethod1_ex2() {
+        Assert.assertEquals(false, tasks.isArrayHas1and4(new Integer[] {4, 4, 4, 4, 4, 4, 4}));
+    }
+
+    @Test
+    public void testMethod1_ex3() {
+        Assert.assertEquals(true, tasks.isArrayHas1and4(new Integer[] {4, 4, 4, 4, 1, 1, 1, 1, 1}));
+    }
+
+    @Test
+    public void testMethod1_ex4() {
+        Assert.assertEquals(false, tasks.isArrayHas1and4(new Integer[] {1, 1, 1}));
+    }
+
+
+
+    @Test
+    public void testMethod2_ex1() {
+        Assert.assertArrayEquals(new int[] {423, 43, 324, 234}, tasks.copyArrayFromLast4(new Integer[] {3, 4, 423, 43, 324, 234}));
+    }
+
+    @Test
+    public void testMethod2_ex2() {
+        Assert.assertArrayEquals(new int[] {234}, tasks.copyArrayFromLast4(new Integer[] {2, 21, 423, 433, 3224, 4, 234}));
+    }
+
+    @Test
+    public void testMethod2_ex3() {
+        Assert.assertArrayEquals(new int[] {43, 324, 234}, tasks.copyArrayFromLast4(new Integer[] {33, 4423, 42123, 4, 43, 324, 234}));
+    }
+
+    @Test
+    public void testMethod2_ex4() {
+        Assert.assertArrayEquals(new int[] {}, tasks.copyArrayFromLast4(new Integer[] {3, 5, 454, 33, 224, 134}));
+    }
+}
