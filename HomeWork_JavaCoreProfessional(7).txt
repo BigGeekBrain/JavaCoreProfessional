@@ -1,0 +1,164 @@
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface AfterSuite {
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface BeforeSuite {
+
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Test {
+    int priority() default 0;
+}
+
+public class FirstClassWithTestMethods {
+    
+    @AfterSuite
+    public static void method1() {
+        System.out.println("1");
+    }
+
+    @Test (priority = 10)
+    public static void method2() {
+        System.out.println("2");
+    }
+
+    @BeforeSuite
+    public static void method3() {
+        System.out.println("3");
+    }
+
+    @Test (priority = 8)
+    public static void method4() {
+        System.out.println("4");
+    }
+
+    @Test (priority = 1)
+    public static void method5() {
+        System.out.println("5");
+    }
+
+    @Test (priority = 6)
+    public static void method6() {
+        System.out.println("6");
+    }
+
+    @Test (priority = 2)
+    public static void method7() {
+        System.out.println("7");
+    }
+}
+
+public class SecondClassWithTestMethods {
+
+    @Test
+    public static void method1() {
+        System.out.println("11");
+    }
+
+    @Test
+    public static void method2() {
+        System.out.println("22");
+    }
+
+    @Test
+    public static void method3() {
+        System.out.println("33");
+    }
+
+    @Test
+    public static void method4() {
+        System.out.println("44");
+    }
+
+    @BeforeSuite
+    public static void method5() {
+        System.out.println("55");
+    }
+
+    @AfterSuite
+    public static void method6() {
+        System.out.println("66");
+    }
+
+    @Test
+    public static void method7() {
+        System.out.println("77");
+    }
+}
+
+public class Tester {
+
+
+    public static void start(Class classForTest) {
+         Class testClass = classForTest;
+         ArrayList<Method> methods = new ArrayList<>(Arrays.asList(testClass.getDeclaredMethods()));
+         Method before = null;
+         Method after = null;
+         byte beforeCounter = 0;
+         byte afterCounter = 0;
+
+
+        Iterator<Method> methodIterator = methods.iterator();
+
+        while (methodIterator.hasNext()) {
+            Method method = methodIterator.next();
+            if (method.isAnnotationPresent(BeforeSuite.class)) {
+                beforeCounter++;
+                before = method;
+                methodIterator.remove();
+            }
+            if (method.isAnnotationPresent(AfterSuite.class)) {
+                afterCounter++;
+                after = method;
+                methodIterator.remove();
+            }
+        }
+
+        for (Method m : methods) {
+            if (beforeCounter > 1) {
+                throw new RuntimeException("Your class consists more than one annotation \"@BeforeSuite\"");
+            }
+            if (afterCounter > 1) {
+                throw new RuntimeException("Your class consists more than one annotation \"@AfterSuite\"");
+            }
+        }
+
+        try {
+
+            before.invoke(null);
+
+            methods.sort(new Comparator<Method>() {
+                public int compare(Method o1, Method o2) {
+                    return o2.getAnnotation(Test.class).priority() - o1.getAnnotation(Test.class).priority();
+                }
+            });
+
+            for (Method m : methods) {
+                m.invoke(null);
+            }
+
+
+            after.invoke(null);
+
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+}
+
+public class MainClass {
+    public static void main(String[] args) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+        Tester.start(Class.forName("com.geekbrains.reflection.FirstClassWithTestMethods"));
+        System.out.println();
+        Tester.start(Class.forName("com.geekbrains.reflection.SecondClassWithTestMethods"));
+    }
+}
