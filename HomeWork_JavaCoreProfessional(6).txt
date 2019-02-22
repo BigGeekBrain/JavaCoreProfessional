@@ -68,15 +68,9 @@ public class Tasks {
         ArrayList<Double> numbers = new ArrayList<>();
 
         for (Integer i : array) {
-            try {
                 if (i != 4 && i != 1) {
-                    throw new RuntimeException();
+                    throw new RuntimeException("your array must contains only 1 and 4");
                 }
-            } catch (RuntimeException e) {
-                System.out.println("your array must contains only 1 and 4");
-                return false;
-            }
-
             numbers.add(array[i].doubleValue());
         }
 
@@ -87,13 +81,9 @@ public class Tasks {
         ArrayList<Integer> defaultArr = new ArrayList<>(Arrays.stream(array).collect(Collectors.toList()));
         ArrayList<Integer> resultArr = new ArrayList<>();
 
-        try {
             if (!defaultArr.contains(4)) {
-                throw new RuntimeException();
+                throw new RuntimeException("your array must contains at least one 4");
             }
-        } catch (RuntimeException e) {
-            System.out.println("your array must contains at least one 4");
-        }
 
 
         for (int i = array.length - 1, j = 0; i >= 0 ; i--, j++) {
@@ -109,12 +99,64 @@ public class Tasks {
     }
 }
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+@RunWith(Parameterized.class)
+public class Test_1 {
 
-public class Tests {
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {false, new Integer[]{1, 4, 1, 1, 1, 4, 1, 4, 1, 6}},
+                {false, new Integer[] {4, 4, 4, 4, 4, 4, 4}},
+                {true, new Integer[] {4, 4, 4, 4, 1, 1, 1, 1, 1}},
+                {false, new Integer[] {1, 1, 1}},
+        });
+    }
+
     private Tasks tasks;
+    private boolean expectedResult;
+    private Integer[] actualArr;
+
+    public Test_1(boolean expectedResult, Integer[] actualArr) {
+        this.expectedResult = expectedResult;
+        this.actualArr = actualArr;
+    }
+
+    @Before
+    public void prepare(){
+        tasks = new Tasks();
+    }
+
+    @Test
+    public void testMethodIsArrayHas1and4() {
+        try {
+            Assert.assertEquals(expectedResult, tasks.isArrayHas1and4(actualArr));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
+
+@RunWith(Parameterized.class)
+public class Test_2 {
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {new int[] {423, 43, 324, 234}, new Integer[] {3, 4, 423, 43, 324, 234}},
+                {new int[] {234}, new Integer[] {2, 21, 423, 433, 3224, 4, 234}},
+                {new int[] {43, 324, 234}, new Integer[] {33, 4423, 42123, 4, 43, 324, 234}},
+                {new int[] {}, new Integer[] {3, 5, 454, 33, 224, 134}},
+        });
+    }
+
+    private Tasks tasks;
+    private int[] expectedResult;
+    private Integer[] actualArr;
+
+    public Test_2(int[] expectedResult, Integer[] actualArr) {
+        this.expectedResult = expectedResult;
+        this.actualArr = actualArr;
+    }
 
     @Before
     public void prepare(){
@@ -123,44 +165,11 @@ public class Tests {
     }
 
     @Test
-    public void testMethod1_ex1() {
-        Assert.assertEquals(false, tasks.isArrayHas1and4(new Integer[] {1, 4, 1, 1, 1, 4, 1, 4, 1, 6}));
-    }
-
-    @Test
-    public void testMethod1_ex2() {
-        Assert.assertEquals(false, tasks.isArrayHas1and4(new Integer[] {4, 4, 4, 4, 4, 4, 4}));
-    }
-
-    @Test
-    public void testMethod1_ex3() {
-        Assert.assertEquals(true, tasks.isArrayHas1and4(new Integer[] {4, 4, 4, 4, 1, 1, 1, 1, 1}));
-    }
-
-    @Test
-    public void testMethod1_ex4() {
-        Assert.assertEquals(false, tasks.isArrayHas1and4(new Integer[] {1, 1, 1}));
-    }
-
-
-
-    @Test
-    public void testMethod2_ex1() {
-        Assert.assertArrayEquals(new int[] {423, 43, 324, 234}, tasks.copyArrayFromLast4(new Integer[] {3, 4, 423, 43, 324, 234}));
-    }
-
-    @Test
-    public void testMethod2_ex2() {
-        Assert.assertArrayEquals(new int[] {234}, tasks.copyArrayFromLast4(new Integer[] {2, 21, 423, 433, 3224, 4, 234}));
-    }
-
-    @Test
-    public void testMethod2_ex3() {
-        Assert.assertArrayEquals(new int[] {43, 324, 234}, tasks.copyArrayFromLast4(new Integer[] {33, 4423, 42123, 4, 43, 324, 234}));
-    }
-
-    @Test
-    public void testMethod2_ex4() {
-        Assert.assertArrayEquals(new int[] {}, tasks.copyArrayFromLast4(new Integer[] {3, 5, 454, 33, 224, 134}));
+    public void testMethodCopyArrayFromLast4() {
+        try {
+            Assert.assertArrayEquals(expectedResult, tasks.copyArrayFromLast4(actualArr));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
